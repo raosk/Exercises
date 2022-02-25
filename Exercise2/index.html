@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graded Exercise 2</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: rgb(192, 202, 202);
+            color:rgb(22, 22, 21);
+            padding: 0 20px 30px 20px;
+            margin: 0;
+        }
+        .outerBox {
+            padding: 2px 20px 15px 20px;
+            background-color: rgb(212, 107, 89)
+        }
+        .productViewBox {
+            margin: 20px;
+            border: 3px solid rgb(17, 8, 8);
+            background-color: rgb(211, 123, 9)
+        }
+        .detailViewBox {
+            margin: 20px;
+            border: 3px solid rgb(17, 8, 8);
+            background-color: rgb(162, 192, 29); 
+        }
+        .cartViewBox {
+            margin: 20px;
+            border: 3px solid rgb(17, 8, 8);
+            background-color: rgb(204, 66, 209); 
+        }
+    </style>
+</head>
+
+<body onload="start()">
+    <div id="header"></div>
+    <div id="target"></div>
+
+    <script>
+        let products;
+        async function start() {
+            const response = await fetch('https://dummyjson.com/products?limit=10')
+            console.log(response);
+            const json = await response.json();
+            products = json.products;
+            listView()
+        };
+
+
+        
+
+        let productsInCart = [];
+
+        class CartObject {
+            constructor(product) {
+            this.id = product.id;
+            this.title = product.title;
+            this.price = product.price;
+            this.quantity = 1;
+            productsInCart.push(this);
+            }
+
+            increaseQuantity() {
+                this.quantity += 1;
+            }
+
+            decreaseQuantity() {
+                this.quantity -= 1;
+                if (this.quantity < 1) {
+                    productsInCart.splice((999999999999), 1);
+                }
+            }
+        };
+
+        function addToCart(arraySlot) {
+            let productObject = products[arraySlot];
+            let existingObject = productsInCart.find(product => product.id === productObject.id);
+            if (!existingObject) {
+                return new CartObject(productObject);
+            }
+            existingObject.increaseQuantity();
+        };
+
+        function detailView(aaa) {     //THERE SHOULD BE A PARAMETER: product
+            let product = products[aaa]; //JUST FOR TESTING
+
+            document.getElementById("header").innerHTML = `
+            <div class="outerBox">
+                    <h1>Graded Exercise 2</h1>
+                    <h2>Product Details</h1>
+                    <button onclick="listView()">Back</button>
+                    <button onclick="CartView()">Cart (${productsInCart.length})</button>
+            </div>
+            `
+
+            let target = document.getElementById("target");
+            target.innerHTML = `
+            <div class="deta">
+                <div class="detailViewBox">
+                    <img src="${product.images[0]}" alt="product image" id="productImage">
+                    <h2>${product.title}</h2>
+                    <div>${product.description}</div>
+                    <div>Category: ${product.category}</div>
+                    <div>Brand: ${product.brand}</div>
+                    <div>Rating: ${product.rating}</div>  
+                    <button onclick="addToCart(${product.id -1})">Add to Cart</button>  
+                </div>
+            </div>
+            `;
+        }
+
+        function listViewProductTemplate(aProduct) {
+                return `
+                <div class="productViewBox">
+                    <img src="${aProduct.thumbnail}">
+                    <h3>${aProduct.title}</h2>
+                    <p>${aProduct.price} €</p>
+                    <button onclick="detailView(${aProduct.id -1})">Details</button>
+                    <button onclick="addToCart(${aProduct.id -1})">Add to Cart</button>
+                </div>
+                `
+            }
+
+        function listView() {
+            document.getElementById("header").innerHTML = `
+            <div class="outerBox">
+                    <h1>Graded Exercise 2</h1>
+                    <h2>Product Catalogue</h1>
+                    <p>${products.length} products available</p>
+                    <button onclick="CartView()">Cart (${productsInCart.length})</button>
+            </div>
+            `
+            document.getElementById("target").innerHTML = `
+                ${products.map(listViewProductTemplate).join('')}
+            `
+        }
+
+        /*function listView() {
+            let target = document.getElementById("target");
+            target.innerHTML = `
+            <div class="outerBox">
+                <button onclick="CartView()">Cart</button>
+            </div>
+            `;   
+            
+            for(let i = 0; i < products.length; i++) {    
+                let newProduct = document.createElement('div');
+                newProduct.className = "productViewBox";
+                newProduct.textContent = products[i].thumbnail + products[i].title + " " + products[i].price;
+                newProduct.onclick = () => detailView(products[i]);
+                newProduct.button;
+                target.appendChild(newProduct);
+            }
+        }*/
+
+        function CartView() {
+            document.getElementById("header").innerHTML = `
+            <div class="outerBox">
+                    <h1>Graded Exercise 2</h1>
+                    <h2>Shopping Cart</h1>
+                    <p> ${productsInCart.length} items in cart</p>
+                    <button onclick="listView()">Back</button>
+            </div>
+            `
+
+            document.getElementById("target").innerHTML = "";
+
+            if (productsInCart.length < 1) {
+                let noProductsInCart = document.createElement('div');
+                noProductsInCart.textContent = "The cart is empty";
+                target.appendChild(noProductsInCart);
+            }else{
+                //create table (with headers: product, quantity, unit price, price)
+                target.innerHTML = `
+                    <div class="outerBox">
+                    </div>
+                    <table>
+                        <tr>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Unit price</th>
+                            <th>Price</th>
+                        </tr>
+                        ${productsInCart.map((product) => {
+                            const {id, title, quantity, price} = product;
+                            return (`
+                            <tr>
+                                <td>${title}</td>
+                                <td>
+                                    ${quantity}
+                                    <button id="productIncreaser-${id}">+</button>
+                                </td>
+                                <td>${price}</td>
+                                <td>${quantity * price}</td>
+                            </tr>
+                        `)}).join('')}
+                    </table>
+                    `;
+
+                    productsInCart.forEach(product => {
+                        const increase = (event) => {
+                            console.log(event)
+                            product.increaseQuantity()
+                            CartView()
+                        }
+                        const button = document.getElementById(`productIncreaser-${product.id}`)
+                        console.log(button)
+                        button.addEventListener("click", increase)
+                    })
+
+                //Print total sum
+                //Button: make order
+            }
+        }
+    </script>
+</body>
+</html>
