@@ -8,29 +8,78 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: rgb(192, 202, 202);
+            background: linear-gradient(to right, rgb(192, 202, 202), rgb(60, 173, 173), rgb(192, 202, 202));
             color:rgb(22, 22, 21);
-            padding: 0 20px 30px 20px;
             margin: 0;
+            font-size: 20px;
+            font-weight: bold;
         }
-        .outerBox {
-            padding: 2px 20px 15px 20px;
-            background-color: rgb(212, 107, 89)
+        #header {
+            padding: 2px 20px 16px 30px;
+            background: linear-gradient(to right, rgb(189, 114, 53), rgb(187, 66, 44));
+        }
+        #target {
+            padding: 20px 20px 20px 20px;
+
+        }
+        .viewGrid {
+            display: flex;
+            flex-wrap: wrap;
+            
         }
         .productViewBox {
             margin: 20px;
             border: 3px solid rgb(17, 8, 8);
-            background-color: rgb(211, 123, 9)
+            background: linear-gradient(45deg, rgb(207, 164, 114), rgb(156, 66, 44));
+            text-align: center;
+            padding: 5px 0px 5px 0px;
+            width: 400px;
+            height: 400px;
+            margin-left:auto;
+            margin-right:auto;
+        }
+        .productViewBox img {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            height: 200px;
         }
         .detailViewBox {
             margin: 20px;
             border: 3px solid rgb(17, 8, 8);
-            background-color: rgb(162, 192, 29); 
+            background: linear-gradient(45deg, rgb(162, 192, 29), rgb(39, 112, 39));
+            padding: 10px 10px 10px 10px;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .detailViewDescription {
+            font-family: 'Courier New', Courier, monospace;
         }
         .cartViewBox {
             margin: 20px;
             border: 3px solid rgb(17, 8, 8);
-            background-color: rgb(204, 66, 209); 
+            background: rgb(55, 187, 228);
+            padding: 10px 10px 10px 10px; 
+        }
+        table tr {
+            display: grid;
+            grid-template-columns: 3fr 1fr 1fr 1fr;
+            border: solid 1px black;
+            padding: 10px 0px;
+            border-radius: 8px;
+            background:rgb(192, 202, 202);
+            text-align: center;
+            width: minmax(300px, 400px);
+        }
+        .tableHeader {
+            background:rgb(118, 134, 134);
+            font-family: 'Courier New', Courier, monospace;
+        }
+        button {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 20px;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -42,17 +91,36 @@
     <script>
         let products;
         async function start() {
-            const response = await fetch('https://dummyjson.com/products?limit=10')
+            const response = await fetch('https://dummyjson.com/products?limit=12')
             console.log(response);
             const json = await response.json();
             products = json.products;
             listView()
         };
 
-
-        
-
         let productsInCart = [];
+
+        function cartCounter() {
+            let sum = 0;
+            if (productsInCart.length > 0) {
+                for (let i = 0; i < productsInCart.length; i++) {
+                sum += productsInCart[i].quantity;
+            }
+            }
+            return sum;
+        }
+
+        function totalPrice() {
+            let sum = 0;
+            if (productsInCart.length > 0) {
+                for (let i = 0; i < productsInCart.length; i++) {
+                let qty = productsInCart[i].quantity;
+                let price = productsInCart[i].price;
+                sum += (qty * price);
+            }
+            }
+            return sum;
+        }
 
         class CartObject {
             constructor(product) {
@@ -70,7 +138,10 @@
             decreaseQuantity() {
                 this.quantity -= 1;
                 if (this.quantity < 1) {
-                    productsInCart.splice((999999999999), 1);
+                    let index = productsInCart.findIndex(item => item.id === this.id);
+                    console.log(index);                 // JUST FOR TESTING! REMOVE!
+                    console.log(productsInCart[index]);     // JUST FOR TESTING! REMOVE!
+                    productsInCart.splice(index, 1);
                 }
             }
         };
@@ -84,17 +155,22 @@
             existingObject.increaseQuantity();
         };
 
+        function detailViewHeader() {
+            document.getElementById("header").innerHTML = `
+            <div>
+                    <h1>Graded Exercise 2</h1>
+                    <h2>Product Details</h1>
+                    <p>Info about the item</p>
+                    <button onclick="listView()">Back</button>
+                    <button onclick="CartView()">Cart (${cartCounter()})</button>
+            </div>
+            `
+        }
+
         function detailView(aaa) {     //THERE SHOULD BE A PARAMETER: product
             let product = products[aaa]; //JUST FOR TESTING
 
-            document.getElementById("header").innerHTML = `
-            <div class="outerBox">
-                    <h1>Graded Exercise 2</h1>
-                    <h2>Product Details</h1>
-                    <button onclick="listView()">Back</button>
-                    <button onclick="CartView()">Cart (${productsInCart.length})</button>
-            </div>
-            `
+            detailViewHeader();
 
             let target = document.getElementById("target");
             target.innerHTML = `
@@ -102,14 +178,25 @@
                 <div class="detailViewBox">
                     <img src="${product.images[0]}" alt="product image" id="productImage">
                     <h2>${product.title}</h2>
-                    <div>${product.description}</div>
+                    <div class="detailViewDescription">${product.description}</div>
                     <div>Category: ${product.category}</div>
                     <div>Brand: ${product.brand}</div>
                     <div>Rating: ${product.rating}</div>  
-                    <button onclick="addToCart(${product.id -1})">Add to Cart</button>  
+                    <button onclick="addToCart(${product.id -1}); detailViewHeader()">Buy</button>  
                 </div>
             </div>
             `;
+        }
+
+        function listViewHeader() {
+            document.getElementById("header").innerHTML = `
+            <div>
+                    <h1>Graded Exercise 2</h1>
+                    <h2>Product Catalogue</h1>
+                    <p>${products.length} products available</p>
+                    <button onclick="CartView()">Cart (${cartCounter()})</button>
+            </div>
+            `
         }
 
         function listViewProductTemplate(aProduct) {
@@ -119,49 +206,27 @@
                     <h3>${aProduct.title}</h2>
                     <p>${aProduct.price} €</p>
                     <button onclick="detailView(${aProduct.id -1})">Details</button>
-                    <button onclick="addToCart(${aProduct.id -1})">Add to Cart</button>
+                    <button onclick="addToCart(${aProduct.id -1}); listViewHeader()">Buy</button>
                 </div>
                 `
             }
 
         function listView() {
-            document.getElementById("header").innerHTML = `
-            <div class="outerBox">
-                    <h1>Graded Exercise 2</h1>
-                    <h2>Product Catalogue</h1>
-                    <p>${products.length} products available</p>
-                    <button onclick="CartView()">Cart (${productsInCart.length})</button>
-            </div>
-            `
+            listViewHeader();
+            
             document.getElementById("target").innerHTML = `
-                ${products.map(listViewProductTemplate).join('')}
+                <div class="viewGrid">
+                    ${products.map(listViewProductTemplate).join('')}
+                </div>
             `
         }
 
-        /*function listView() {
-            let target = document.getElementById("target");
-            target.innerHTML = `
-            <div class="outerBox">
-                <button onclick="CartView()">Cart</button>
-            </div>
-            `;   
-            
-            for(let i = 0; i < products.length; i++) {    
-                let newProduct = document.createElement('div');
-                newProduct.className = "productViewBox";
-                newProduct.textContent = products[i].thumbnail + products[i].title + " " + products[i].price;
-                newProduct.onclick = () => detailView(products[i]);
-                newProduct.button;
-                target.appendChild(newProduct);
-            }
-        }*/
-
         function CartView() {
             document.getElementById("header").innerHTML = `
-            <div class="outerBox">
+            <div>
                     <h1>Graded Exercise 2</h1>
                     <h2>Shopping Cart</h1>
-                    <p> ${productsInCart.length} items in cart</p>
+                    <p> ${cartCounter()} items in cart</p>
                     <button onclick="listView()">Back</button>
             </div>
             `
@@ -173,31 +238,33 @@
                 noProductsInCart.textContent = "The cart is empty";
                 target.appendChild(noProductsInCart);
             }else{
-                //create table (with headers: product, quantity, unit price, price)
                 target.innerHTML = `
-                    <div class="outerBox">
-                    </div>
-                    <table>
-                        <tr>
-                            <th>Product</th>
-                            <th>Quantity</th>
-                            <th>Unit price</th>
-                            <th>Price</th>
-                        </tr>
-                        ${productsInCart.map((product) => {
-                            const {id, title, quantity, price} = product;
-                            return (`
-                            <tr>
-                                <td>${title}</td>
-                                <td>
-                                    ${quantity}
-                                    <button id="productIncreaser-${id}">+</button>
-                                </td>
-                                <td>${price}</td>
-                                <td>${quantity * price}</td>
+                    <div class="cartViewBox">
+                        <table>
+                            <tr class="tableHeader">
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Unit price</th>
+                                <th>Price</th>
                             </tr>
-                        `)}).join('')}
-                    </table>
+                            ${productsInCart.map((product) => {
+                                const {id, title, quantity, price} = product;
+                                return (`
+                                <tr>
+                                    <td>${title}</td>
+                                    <td>
+                                        <button id="productDecreaser-${id}">-</button>
+                                        ${quantity}
+                                        <button id="productIncreaser-${id}">+</button>
+                                    </td>
+                                    <td>${price}€</td>
+                                    <td>${quantity * price}€</td>
+                                </tr>
+                            `)}).join('')}
+                        </table>
+                        <p>Total Price ${totalPrice()}€</p>
+                        <button>Order</button>
+                    </div>
                     `;
 
                     productsInCart.forEach(product => {
@@ -211,8 +278,16 @@
                         button.addEventListener("click", increase)
                     })
 
-                //Print total sum
-                //Button: make order
+                    productsInCart.forEach(product => {
+                        const decrease = (event) => {
+                            console.log(event)
+                            product.decreaseQuantity()
+                            CartView()
+                        }
+                        const button = document.getElementById(`productDecreaser-${product.id}`)
+                        console.log(button)
+                        button.addEventListener("click", decrease)
+                    })
             }
         }
     </script>
