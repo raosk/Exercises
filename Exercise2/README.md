@@ -1,1 +1,1 @@
-Just open the `index.html` in browser and code editor.
+Just open the `index.html` in a web browser and code editor.
